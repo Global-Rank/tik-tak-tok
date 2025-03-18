@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Tic-Tac-Toe</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial;
+            padding: 20px;
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px;
+        }
+
+        .cell {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
+            background: #f0f2f5;
+        }
+
+        #reset {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h2>Крестики-нолики</h2>
+    <div class="board" id="board"></div>
+    <button id="reset">Новая игра</button>
+
+    <script>
+        let currentPlayer = 'X';
+        let gameBoard = ['', '', '', '', '', '', '', '', ''];
+        const board = document.getElementById('board');
+        const resetButton = document.getElementById('reset');
+
+        // Создание игрового поля
+        function createBoard() {
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.setAttribute('data-index', i);
+                cell.addEventListener('click', handleCellClick);
+                board.appendChild(cell);
+            }
+        }
+
+        // Обработчик клика по ячейке
+        function handleCellClick(e) {
+            const index = e.target.getAttribute('data-index');
+            
+            if (gameBoard[index] === '' && !checkWinner()) {
+                gameBoard[index] = currentPlayer;
+                e.target.textContent = currentPlayer;
+                
+                if (checkWinner()) {
+                    setTimeout(() => {
+                        Telegram.WebApp.sendData(`Победил ${currentPlayer}!`);
+                        Telegram.WebApp.close();
+                    }, 1500);
+                } else if (gameBoard.every(cell => cell !== '')) {
+                    setTimeout(() => {
+                        Telegram.WebApp.sendData('Ничья!');
+                        Telegram.WebApp.close();
+                    }, 1500);
+                } else {
+                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                }
+            }
+        }
+
+        // Проверка победы
+        function checkWinner() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Горизонтали
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Вертикали
+                [0, 4, 8], [2, 4, 6] // Диагонали
+            ];
+
+            return winPatterns.some(pattern => 
+                pattern.every(index => 
+                    gameBoard[index] === currentPlayer
+                )
+            );
+        }
+
+        // Сброс игры
+        function resetGame() {
+            gameBoard = ['', '', '', '', '', '', '', '', ''];
+            currentPlayer = 'X';
+            board.querySelectorAll('.cell').forEach(cell => {
+                cell.textContent = '';
+            });
+        }
+
+        // Инициализация
+        createBoard();
+        resetButton.addEventListener('click', resetGame);
+
+        // Инициализация Telegram WebApp
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+    </script>
+</body>
+</html>
