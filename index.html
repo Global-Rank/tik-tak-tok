@@ -2,124 +2,114 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Tic-Tac-Toe</title>
+    <title>Свадебный Хомяк</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-family: Arial;
+            margin: 0;
             padding: 20px;
-        }
-        
-        .board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px;
+            background: #f8f0e6;
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            text-align: center;
         }
 
-        .cell {
-            width: 80px;
-            height: 80px;
-            border: 2px solid #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 40px;
+        #counter {
+            font-size: 24px;
+            color: #6b4f4f;
+            margin-bottom: 20px;
+        }
+
+        .hamster {
+            width: 150px;
+            height: 150px;
             cursor: pointer;
-            background: #f0f2f5;
+            transition: transform 0.1s;
         }
 
-        #reset {
-            padding: 10px 20px;
-            font-size: 16px;
-            background: #007bff;
+        .hamster:active {
+            transform: scale(0.95);
+        }
+
+        #invitation {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            margin: 20px auto;
+            max-width: 300px;
+        }
+
+        .heart {
+            color: #ff4d4d;
+            font-size: 24px;
+        }
+
+        button {
+            background: #6b4f4f;
             color: white;
             border: none;
-            border-radius: 5px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 10px;
             cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <h2>Крестики-нолики</h2>
-    <div class="board" id="board"></div>
-    <button id="reset">Новая игра</button>
+    <div id="counter">Собранные сердечки: ❤️ 0</div>
+    <img src="https://cdn-icons-png.flaticon.com/512/3202/3202926.png" 
+         class="hamster" 
+         id="hamster"
+         alt="Хомяк">
+    
+    <div id="invitation">
+        <h2>❤️ Приглашение на свадьбу ❤️</h2>
+        <p>Никита и Юля</p>
+        <p>29 мая 2025 года</p>
+        <p>Начало в 17:30</p>
+        <p>Анти-кафе "Циферблат"</p>
+        <button onclick="Telegram.WebApp.close()">Закрыть</button>
+    </div>
 
     <script>
-        let currentPlayer = 'X';
-        let gameBoard = ['', '', '', '', '', '', '', '', ''];
-        const board = document.getElementById('board');
-        const resetButton = document.getElementById('reset');
-
-        // Создание игрового поля
-        function createBoard() {
-            for (let i = 0; i < 9; i++) {
-                const cell = document.createElement('div');
-                cell.classList.add('cell');
-                cell.setAttribute('data-index', i);
-                cell.addEventListener('click', handleCellClick);
-                board.appendChild(cell);
-            }
-        }
-
-        // Обработчик клика по ячейке
-        function handleCellClick(e) {
-            const index = e.target.getAttribute('data-index');
-            
-            if (gameBoard[index] === '' && !checkWinner()) {
-                gameBoard[index] = currentPlayer;
-                e.target.textContent = currentPlayer;
-                
-                if (checkWinner()) {
-                    setTimeout(() => {
-                        Telegram.WebApp.sendData(`Победил ${currentPlayer}!`);
-                        Telegram.WebApp.close();
-                    }, 1500);
-                } else if (gameBoard.every(cell => cell !== '')) {
-                    setTimeout(() => {
-                        Telegram.WebApp.sendData('Ничья!');
-                        Telegram.WebApp.close();
-                    }, 1500);
-                } else {
-                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                }
-            }
-        }
-
-        // Проверка победы
-        function checkWinner() {
-            const winPatterns = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Горизонтали
-                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Вертикали
-                [0, 4, 8], [2, 4, 6] // Диагонали
-            ];
-
-            return winPatterns.some(pattern => 
-                pattern.every(index => 
-                    gameBoard[index] === currentPlayer
-                )
-            );
-        }
-
-        // Сброс игры
-        function resetGame() {
-            gameBoard = ['', '', '', '', '', '', '', '', ''];
-            currentPlayer = 'X';
-            board.querySelectorAll('.cell').forEach(cell => {
-                cell.textContent = '';
-            });
-        }
-
-        // Инициализация
-        createBoard();
-        resetButton.addEventListener('click', resetGame);
+        let score = 0;
+        const hamster = document.getElementById('hamster');
+        const counter = document.getElementById('counter');
+        const invitation = document.getElementById('invitation');
 
         // Инициализация Telegram WebApp
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
+
+        hamster.addEventListener('click', () => {
+            score++;
+            counter.innerHTML = `Собранные сердечки: ❤️ ${score}`;
+            
+            // Анимация прыжка
+            hamster.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                hamster.style.transform = 'translateY(0)';
+            }, 100);
+
+            // Проверка победы
+            if(score >= 20) {
+                hamster.style.display = 'none';
+                invitation.style.display = 'block';
+                Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+            }
+        });
+
+        // Случайное перемещение хомяка каждые 2 секунды
+        setInterval(() => {
+            if(score < 20) {
+                const x = Math.random() * (window.innerWidth - 200);
+                const y = Math.random() * (window.innerHeight - 200);
+                hamster.style.position = 'absolute';
+                hamster.style.left = x + 'px';
+                hamster.style.top = y + 'px';
+            }
+        }, 2000);
     </script>
 </body>
 </html>
